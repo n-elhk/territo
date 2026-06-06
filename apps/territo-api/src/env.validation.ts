@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['local', 'production']).default('local'),
+  NODE_ENV: z.enum(['local', 'development', 'production']).default('local'),
 
   // PostgreSQL
   DB_HOST: z.string().min(1),

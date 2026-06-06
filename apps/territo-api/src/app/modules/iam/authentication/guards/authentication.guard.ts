@@ -9,27 +9,20 @@ import { AUTH_TYPE_KEY } from '../decorators/auth.decorator';
 import { AuthType } from '../enums/auth-type.enum';
 import { AccessTokenGuard } from './access-token.guard';
 
-/**
- * Guard global appliqué via `APP_GUARD`. Il choisit le bon sous-guard
- * en fonction du décorateur `@Auth(AuthType.X)` posé sur la route
- * (ou la valeur par défaut `Cookie` si absent).
- */
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
   private static readonly defaultAuthType = AuthType.Cookie;
-
-  private readonly authTypeGuardMap: Record<
-    AuthType,
-    CanActivate | CanActivate[]
-  > = {
-    [AuthType.Cookie]: this.accessTokenGuard,
-    [AuthType.None]: { canActivate: () => true },
-  };
+  private readonly authTypeGuardMap: Record<AuthType, CanActivate | CanActivate[]>;
 
   constructor(
     private readonly reflector: Reflector,
     private readonly accessTokenGuard: AccessTokenGuard,
-  ) {}
+  ) {
+    this.authTypeGuardMap = {
+      [AuthType.Cookie]: this.accessTokenGuard,
+      [AuthType.None]: { canActivate: () => true },
+    };
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const authTypes = this.reflector.getAllAndOverride<AuthType[]>(

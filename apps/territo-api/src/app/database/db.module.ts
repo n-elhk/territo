@@ -19,7 +19,7 @@ const entities = [User];
         database: config.get<string>('DB_NAME', 'territo'),
         entities,
         migrations: [],
-        synchronize: false,
+        synchronize: config.get<string>('NODE_ENV') !== 'production',
         logging: config.get<string>('NODE_ENV') === 'development',
       }),
     }),

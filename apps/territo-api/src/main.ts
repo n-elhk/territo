@@ -1,12 +1,11 @@
 import { config } from 'dotenv';
 import { validateEnv } from './env.validation';
 
-const env = process.env['NODE_ENV'] ?? 'local';
-config({ path: `.env.${env}`, override: false });
+config({ path: '.env.local', override: false });
 
 validateEnv(process.env);
 
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
   FastifyAdapter,
@@ -25,7 +24,7 @@ async function bootstrap() {
   await app.register(fastifyCookie);
   app.setGlobalPrefix('api');
   app.enableCors();
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Territo API')
