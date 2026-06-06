@@ -19,3 +19,20 @@ services:
     volumes:
       - ./apps/territo-api/src:/app/apps/territo-api/src
     command: npx nx serve territo-api
+
+  worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/territo-api/.env.local
+    environment:
+      DB_HOST: postgres
+    volumes:
+      - ./workers:/app
+      - ./data:/data   # mount local data/ folder for shapefiles / CSV
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - workers        # ne démarre pas avec docker compose up
