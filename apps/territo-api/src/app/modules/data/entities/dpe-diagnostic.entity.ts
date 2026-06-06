@@ -17,15 +17,13 @@ export enum HousingType {
 }
 
 @Entity('dpe_diagnostics')
-@Index(['communeCode'])
-@Index(['diagnosticDate'])
 @Index(['energyClass'])
 export class DpeDiagnostic {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   // Numéro DPE pseudonymisé — jamais le numéro brut
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   dpeNumberHash!: string | null;
 
   @Index()
@@ -44,18 +42,18 @@ export class DpeDiagnostic {
   @Column({ type: 'numeric', nullable: true })
   builtSurface!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   constructionPeriod!: string | null;
 
   // Adresse pseudonymisée — pas de nom ni numéro brut
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   addressHash!: string | null;
 
   @Index()
   @Column()
   communeCode!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   parcelId!: string | null;
 
   @Column({ type: 'geometry', nullable: true })

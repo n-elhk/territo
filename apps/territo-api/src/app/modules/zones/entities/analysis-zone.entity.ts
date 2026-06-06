@@ -19,6 +19,6 @@ export class AnalysisZone {
   @Column({ type: 'geometry', nullable: true })
   geom!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   parentZoneId!: string | null;
 }

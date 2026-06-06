@@ -19,7 +19,7 @@ export class ScoreHistorySnapshot {
   @Column({ type: 'enum', enum: Object.values(UserSegment), nullable: true })
   userSegment!: UserSegment | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   tradeOrCategory!: string | null;
 
   @Column({ type: 'enum', enum: Object.values(Period) })

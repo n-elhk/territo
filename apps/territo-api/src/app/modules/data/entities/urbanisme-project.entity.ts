@@ -19,7 +19,6 @@ export enum WorkCategory {
 }
 
 @Entity('urbanisme_projects')
-@Index(['communeCode'])
 @Index(['decisionDate'])
 @Index(['projectType'])
 export class UrbanismeProject {
@@ -36,7 +35,7 @@ export class UrbanismeProject {
   @Column({ nullable: true })
   communeName!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   parcelId!: string | null;
 
   @Column({ type: 'enum', enum: Object.values(ProjectType) })
@@ -63,7 +62,7 @@ export class UrbanismeProject {
   @Column({ type: 'numeric', nullable: true })
   surfaceExisting!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   destination!: string | null;
 
   @Column({ type: 'geometry', nullable: true })

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PostgisRepository } from './postgis.repository';
 import { DpeDiagnostic } from '../modules/data/entities/dpe-diagnostic.entity';
 import { DvfTransaction } from '../modules/data/entities/dvf-transaction.entity';
 import { UrbanismeProject } from '../modules/data/entities/urbanisme-project.entity';
@@ -12,10 +13,12 @@ import { ScoringConfig } from '../modules/scores/entities/scoring-config.entity'
 import { ScoringQualityRule } from '../modules/scores/entities/scoring-quality-rule.entity';
 import { ZoneScore } from '../modules/scores/entities/zone-score.entity';
 import { AnalysisZone } from '../modules/zones/entities/analysis-zone.entity';
+import { Alert } from '../modules/alerts/entities/alert.entity';
 import { User } from '../modules/iam/entities/user.entity';
 
 const entities = [
   User,
+  Alert,
   AnalysisZone,
   UrbanismeProject,
   DvfTransaction,
@@ -45,9 +48,11 @@ const entities = [
         migrations: [],
         synchronize: config.get<string>('NODE_ENV') !== 'production',
         logging: config.get<string>('NODE_ENV') === 'development',
+        retryAttempts: 1,
       }),
     }),
   ],
-  exports: [TypeOrmModule],
+  providers: [PostgisRepository],
+  exports: [TypeOrmModule, PostgisRepository],
 })
 export class DbModule {}

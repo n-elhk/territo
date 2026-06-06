@@ -13,7 +13,7 @@ export class ScoringConfig {
   @Column({ type: 'enum', enum: Object.values(UserSegment), nullable: true })
   userSegment!: UserSegment | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   tradeOrCategory!: string | null;
 
   @Column()

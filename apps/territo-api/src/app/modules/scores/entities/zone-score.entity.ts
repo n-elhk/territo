@@ -23,7 +23,7 @@ export class ZoneScore {
   userSegment!: UserSegment | null;
 
   // Métier ou catégorie (ex: "menuisier", "isolation", "couvreur")
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   tradeOrCategory!: string | null;
 
   @Column({ type: 'enum', enum: Object.values(Period) })
@@ -67,7 +67,7 @@ export class ZoneScore {
   qualityWarnings!: string[];
 
   // Zone de repli si la maille initiale est trop fragile
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   fallbackZoneId!: string | null;
 
   // Raisons principales du score (ex: ["DPE E/F/G supérieur à la médiane", "forte activité d'extensions"])

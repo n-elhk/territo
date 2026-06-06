@@ -9,8 +9,6 @@ export enum PropertyType {
 }
 
 @Entity('dvf_transactions')
-@Index(['communeCode'])
-@Index(['mutationDate'])
 @Index(['parcelId'])
 export class DvfTransaction {
   @PrimaryGeneratedColumn('uuid')
@@ -36,7 +34,7 @@ export class DvfTransaction {
   @Column()
   communeCode!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   parcelId!: string | null;
 
   @Column({ type: 'numeric', nullable: true })

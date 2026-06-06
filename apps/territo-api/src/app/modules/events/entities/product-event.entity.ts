@@ -31,7 +31,7 @@ export class ProductEvent {
   @Column({ type: 'enum', enum: Object.values(UserSegment), nullable: true })
   userSegment!: UserSegment | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   zoneId!: string | null;
 
   @Column({ type: 'enum', enum: Object.values(ScoreType), nullable: true })
