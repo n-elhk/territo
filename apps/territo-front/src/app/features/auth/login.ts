@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { form, FormField, FormRoot, required, email as emailRule } from '@angular/forms/signals';
+import { form, FormField, FormRoot, validateStandardSchema } from '@angular/forms/signals';
+import { loginSchema } from '@territo/schemas';
 
 import { UserStore } from '../../core/user.store';
 
@@ -84,16 +85,14 @@ export class LoginComponent {
   private readonly model = signal({ email: '', password: '' });
 
   readonly loginForm = form(this.model, (s) => {
-    required(s.email, { message: 'Email requis' });
-    emailRule(s.email, { message: 'Email invalide' });
-    required(s.password, { message: 'Mot de passe requis' });
+    validateStandardSchema(s.email, loginSchema.shape.email);
+    validateStandardSchema(s.password, loginSchema.shape.password);
   }, {
     submission: {
       action: async () => {
         this.error.set(null);
         try {
-          const { email, password } = this.model();
-          await this.store.login(email, password);
+          await this.store.login(this.model());
           await this.router.navigate(['/']);
         } catch {
           this.error.set('Email ou mot de passe incorrect.');

@@ -1,5 +1,6 @@
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import type { LoginDto, RegisterDto } from '@territo/schemas';
 import { IS_AUTH_ENDPOINT } from './interceptors/http-context.tokens';
 
 export interface AuthUser {
@@ -15,12 +16,12 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/auth';
 
-  login(email: string, password: string) {
-    return this.http.post<AuthUser>(`${this.baseUrl}/login`, { email, password }, { context: authContext });
+  login(dto: LoginDto) {
+    return this.http.post<AuthUser>(`${this.baseUrl}/login`, dto, { context: authContext });
   }
 
-  register(email: string, password: string, name?: string) {
-    return this.http.post<AuthUser>(`${this.baseUrl}/register`, { email, password, name }, { context: authContext });
+  register(dto: RegisterDto) {
+    return this.http.post<AuthUser>(`${this.baseUrl}/register`, dto, { context: authContext });
   }
 
   logout() {

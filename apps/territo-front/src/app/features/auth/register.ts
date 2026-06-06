@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { form, FormField, FormRoot, required, email as emailRule, minLength } from '@angular/forms/signals';
+import { form, FormField, FormRoot, validateStandardSchema } from '@angular/forms/signals';
+import { registerSchema } from '@territo/schemas';
 
 import { UserStore } from '../../core/user.store';
 
@@ -103,17 +104,15 @@ export class RegisterComponent {
   private readonly model = signal({ name: '', email: '', password: '' });
 
   readonly registerForm = form(this.model, (s) => {
-    required(s.email, { message: 'Email requis' });
-    emailRule(s.email, { message: 'Email invalide' });
-    required(s.password, { message: 'Mot de passe requis' });
-    minLength(s.password, 8);
+    validateStandardSchema(s.email, registerSchema.shape.email);
+    validateStandardSchema(s.password, registerSchema.shape.password);
   }, {
     submission: {
       action: async () => {
         this.error.set(null);
         try {
-          const m = this.model();
-          await this.store.register(m.email, m.password, m.name || undefined);
+          const { email, password, name } = this.model();
+          await this.store.register({ email, password, name: name || undefined });
           await this.router.navigate(['/']);
         } catch {
           this.error.set('Impossible de créer le compte. Email déjà utilisé ?');

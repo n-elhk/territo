@@ -2,6 +2,7 @@ import { computed, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { lastValueFrom } from 'rxjs';
+import type { LoginDto, RegisterDto } from '@territo/schemas';
 import { AuthService, AuthUser } from './auth.service';
 import { ApiError, parseApiError } from './api-error';
 
@@ -36,10 +37,10 @@ export const UserStore = signalStore(
         patchState(store, { currentUser: null, status: 'idle', error: null });
       },
 
-      async login(email: string, password: string) {
+      async login({ email, password }: LoginDto) {
         patchState(store, { status: 'pending', error: null });
         try {
-          const user = await lastValueFrom(auth.login(email, password));
+          const user = await lastValueFrom(auth.login({ email, password }));
           patchState(store, { currentUser: user, status: 'success' });
         } catch (err) {
           patchState(store, { error: parseApiError(err as HttpErrorResponse), status: 'error' });
@@ -47,10 +48,10 @@ export const UserStore = signalStore(
         }
       },
 
-      async register(email: string, password: string, name?: string) {
+      async register({ email, password, name }: RegisterDto) {
         patchState(store, { status: 'pending', error: null });
         try {
-          const user = await lastValueFrom(auth.register(email, password, name));
+          const user = await lastValueFrom(auth.register({ email, password, name }));
           patchState(store, { currentUser: user, status: 'success' });
         } catch (err) {
           patchState(store, { error: parseApiError(err as HttpErrorResponse), status: 'error' });

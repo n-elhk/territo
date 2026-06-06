@@ -9,6 +9,9 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
-    "target": "es2022"
+    "target": "es2022",
+    "paths": {
+      "@territo/schemas": ["./packages/schemas/src/index.ts"]
+    }
   }
 }
