@@ -28,6 +28,7 @@ services:
       - ./apps/territo-api/.env.local
     environment:
       DB_HOST: postgres
+      PYTHONPATH: /app
     volumes:
       - ./workers:/app
       - ./data:/data   # mount local data/ folder for shapefiles / CSV

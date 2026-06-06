@@ -55,13 +55,13 @@ export class ZonesService {
       score_type: score.scoreType,
       trade: score.tradeOrCategory,
       period: score.period,
-      global_score: score.globalScore,
-      confidence_score: score.confidenceScore,
+      global_score: Number(score.globalScore),
+      confidence_score: Number(score.confidenceScore),
       score_visibility: score.scoreVisibility,
       trend: {
         label: score.trendLabel,
-        delta_previous_period: score.globalScoreDeltaPrevious,
-        delta_year: score.globalScoreDeltaYear,
+        delta_previous_period: score.globalScoreDeltaPrevious != null ? Number(score.globalScoreDeltaPrevious) : null,
+        delta_year: score.globalScoreDeltaYear != null ? Number(score.globalScoreDeltaYear) : null,
       },
       sub_scores: score.subScores,
       quality_warnings: score.qualityWarnings,
@@ -75,21 +75,21 @@ export class ZonesService {
 
     const qb = this.historyRepo
       .createQueryBuilder('h')
-      .where('h.zone_id = :zoneId', { zoneId })
-      .andWhere('h.score_type = :scoreType', { scoreType: query.score_type })
+      .where('h.zoneId = :zoneId', { zoneId })
+      .andWhere('h.scoreType = :scoreType', { scoreType: query.score_type })
       .andWhere('h.period = :period', { period: query.period });
 
     if (query.trade) {
-      qb.andWhere('h.trade_or_category = :trade', { trade: query.trade });
+      qb.andWhere('h.tradeOrCategory = :trade', { trade: query.trade });
     }
     if (query.from) {
-      qb.andWhere('h.generated_at >= :from', { from: query.from });
+      qb.andWhere('h.generatedAt >= :from', { from: query.from });
     }
     if (query.to) {
-      qb.andWhere('h.generated_at <= :to', { to: query.to });
+      qb.andWhere('h.generatedAt <= :to', { to: query.to });
     }
 
-    const snapshots = await qb.orderBy('h.generated_at', 'ASC').getMany();
+    const snapshots = await qb.orderBy('h.generatedAt', 'ASC').getMany();
 
     return parseResponse(scoreHistoryResponseSchema, {
       zone: { id: zone.id, name: zone.name },
@@ -98,7 +98,7 @@ export class ZonesService {
       period: query.period,
       series: snapshots.map((s) => ({
         date: s.generatedAt,
-        global_score: s.globalScore,
+        global_score: Number(s.globalScore),
         sub_scores: s.subScores,
       })),
     });
@@ -118,23 +118,23 @@ export class ZonesService {
     }>(
       `
       SELECT
-        az.id            AS zone_id,
-        az.name          AS zone_name,
-        az.commune_code,
-        zs.global_score,
-        zs.global_score_delta_previous,
-        zs.trend_label,
-        zs.confidence_score,
-        zs.score_visibility,
-        zs.trade_or_category
+        az.id                             AS zone_id,
+        az.name                           AS zone_name,
+        az."communeCode"                  AS commune_code,
+        zs."globalScore"                  AS global_score,
+        zs."globalScoreDeltaPrevious"     AS global_score_delta_previous,
+        zs."trendLabel"                   AS trend_label,
+        zs."confidenceScore"              AS confidence_score,
+        zs."scoreVisibility"              AS score_visibility,
+        zs."tradeOrCategory"              AS trade_or_category
       FROM zone_scores zs
-      JOIN analysis_zones az ON az.id = zs.zone_id
-      WHERE az.commune_code = $1
-        AND zs.score_type = $2
+      JOIN analysis_zones az ON az.id = zs."zoneId"::uuid
+      WHERE az."communeCode" = $1
+        AND zs."scoreType" = $2
         AND zs.period = $3
-        AND zs.global_score_delta_previous >= $4
-        ${query.category ? 'AND zs.trade_or_category = $6' : ''}
-      ORDER BY zs.global_score_delta_previous DESC
+        AND zs."globalScoreDeltaPrevious" >= $4
+        ${query.category ? 'AND zs."tradeOrCategory" = $6' : ''}
+      ORDER BY zs."globalScoreDeltaPrevious" DESC
       LIMIT $5
       `,
       [

@@ -31,35 +31,35 @@ export class ScoresService {
     }>(
       `
       SELECT
-        az.id              AS zone_id,
-        az.name            AS zone_name,
-        az.commune_code,
-        zs.global_score,
-        zs.confidence_score,
-        zs.score_visibility,
-        zs.trend_label,
-        zs.global_score_delta_previous,
-        zs.global_score_delta_year,
-        zs.sub_scores,
-        zs.quality_warnings,
+        az.id                             AS zone_id,
+        az.name                           AS zone_name,
+        az."communeCode"                  AS commune_code,
+        zs."globalScore"                  AS global_score,
+        zs."confidenceScore"              AS confidence_score,
+        zs."scoreVisibility"              AS score_visibility,
+        zs."trendLabel"                   AS trend_label,
+        zs."globalScoreDeltaPrevious"     AS global_score_delta_previous,
+        zs."globalScoreDeltaYear"         AS global_score_delta_year,
+        zs."subScores"                    AS sub_scores,
+        zs."qualityWarnings"              AS quality_warnings,
         zs.explanation,
         ST_Distance(
           az.geom::geography,
           ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography
         ) AS distance_m
       FROM analysis_zones az
-      JOIN zone_scores zs ON zs.zone_id = az.id
+      JOIN zone_scores zs ON zs."zoneId"::uuid = az.id
       WHERE ST_DWithin(
           az.geom::geography,
           ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography,
           $3
         )
-        AND zs.score_type = 'prospection_locale'
-        AND zs.trade_or_category = $4
-        AND zs.period = $5
-      ORDER BY zs.global_score DESC
+        AND zs."scoreType" = $4
+        AND zs."tradeOrCategory" = $5
+        AND zs.period = $6
+      ORDER BY zs."globalScore" DESC
       `,
-      [dto.lat, dto.lng, radiusMeters, dto.trade, dto.period],
+      [dto.lat, dto.lng, radiusMeters, dto.score_type, dto.trade, dto.period],
     );
 
     return parseResponse(localScoreResponseSchema, {
@@ -101,24 +101,24 @@ export class ScoresService {
     }>(
       `
       SELECT
-        az.id              AS zone_id,
-        az.name            AS zone_name,
-        az.commune_code,
-        az.zone_type,
-        zs.global_score,
-        zs.confidence_score,
-        zs.score_visibility,
-        zs.trend_label,
-        zs.global_score_delta_previous,
-        zs.sub_scores,
-        zs.quality_warnings
+        az.id                             AS zone_id,
+        az.name                           AS zone_name,
+        az."communeCode"                  AS commune_code,
+        az."zoneType"                     AS zone_type,
+        zs."globalScore"                  AS global_score,
+        zs."confidenceScore"              AS confidence_score,
+        zs."scoreVisibility"              AS score_visibility,
+        zs."trendLabel"                   AS trend_label,
+        zs."globalScoreDeltaPrevious"     AS global_score_delta_previous,
+        zs."subScores"                    AS sub_scores,
+        zs."qualityWarnings"              AS quality_warnings
       FROM analysis_zones az
-      JOIN zone_scores zs ON zs.zone_id = az.id
-      WHERE az.commune_code = $1
-        AND az.zone_type = $2
-        AND zs.score_type = $3
+      JOIN zone_scores zs ON zs."zoneId"::uuid = az.id
+      WHERE az."communeCode" = $1
+        AND az."zoneType" = $2
+        AND zs."scoreType" = $3
         AND zs.period = $4
-      ORDER BY zs.global_score DESC
+      ORDER BY zs."globalScore" DESC
       LIMIT $5
       `,
       [query.territory_code, query.zone_level, query.score_type, query.period, query.limit],

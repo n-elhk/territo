@@ -17,12 +17,10 @@ Usage:
 
 import argparse
 import sys
-import os
 import json
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from tqdm import tqdm
 from db import get_connection

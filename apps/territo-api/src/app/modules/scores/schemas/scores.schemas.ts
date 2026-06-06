@@ -9,6 +9,7 @@ export const localScoreSchema = z.object({
   lng: z.number().min(-180).max(180),
   radius_km: z.number().int().min(1).max(100).default(20),
   period: z.nativeEnum(Period).default(Period.TwelveMonths),
+  score_type: z.nativeEnum(ScoreType).default(ScoreType.ProspectionLocale),
 });
 
 export const territoryBenchmarkQuerySchema = z.object({

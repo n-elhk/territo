@@ -11,10 +11,7 @@ Usage:
 """
 
 import argparse
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import requests
 from tqdm import tqdm

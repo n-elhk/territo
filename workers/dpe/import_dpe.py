@@ -14,11 +14,8 @@ Usage:
 
 import argparse
 import hashlib
-import sys
-import os
 from urllib.parse import urlparse, parse_qs
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import time
 import requests
