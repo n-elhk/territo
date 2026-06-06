@@ -1,0 +1,15 @@
+services:
+  postgres:
+    env_file:
+      - ./apps/territo-api/.env.production
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
+
+  api:
+    env_file:
+      - ./apps/territo-api/.env.production
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

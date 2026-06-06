@@ -1,0 +1,21 @@
+services:
+  postgres:
+    env_file:
+      - ./apps/territo-api/.env.local
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  api:
+    env_file:
+      - ./apps/territo-api/.env.local
+    ports:
+      - "3000:3000"
+    build:
+      target: build
+    volumes:
+      - ./apps/territo-api/src:/app/apps/territo-api/src
+    command: npx nx serve territo-api
