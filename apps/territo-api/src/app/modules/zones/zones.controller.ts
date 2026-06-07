@@ -3,9 +3,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import {
   risingZonesQuerySchema,
+  zoneGeoJsonQuerySchema,
   zoneScoreHistoryQuerySchema,
   zoneScoresQuerySchema,
   type RisingZonesQueryDto,
+  type ZoneGeoJsonQueryDto,
   type ZoneScoreHistoryQueryDto,
   type ZoneScoresQueryDto,
 } from './schemas/zones.schemas';
@@ -15,6 +17,14 @@ import { ZonesService } from './zones.service';
 @Controller('zones')
 export class ZonesController {
   constructor(private readonly zonesService: ZonesService) {}
+
+  @Get('geojson')
+  @ApiOperation({ summary: 'GeoJSON des zones avec scores — source MapLibre' })
+  getGeoJson(
+    @Query(new ZodValidationPipe(zoneGeoJsonQuerySchema)) query: ZoneGeoJsonQueryDto,
+  ) {
+    return this.zonesService.getZonesGeoJson(query);
+  }
 
   @Get('rising')
   @ApiOperation({ summary: 'Zones dont le score progresse le plus sur la période' })

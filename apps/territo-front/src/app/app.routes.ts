@@ -19,5 +19,16 @@ export const appRoutes: Route[] = [
     loadComponent: () =>
       import('./features/auth/register').then((m) => m.RegisterComponent),
   },
+  {
+    path: 'map',
+    loadComponent: () => import('./features/map/map').then((m) => m.MapPageComponent),
+  },
+  {
+    path: 'local-opportunities',
+    loadComponent: () =>
+      import('./features/local-opportunities/local-opportunities').then(
+        (m) => m.LocalOpportunitiesComponent,
+      ),
+  },
   { path: '**', redirectTo: '' },
 ];

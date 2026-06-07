@@ -41,10 +41,20 @@ import { UserStore } from '../core/user.store';
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div class="bg-white rounded-2xl border border-gray-200 p-6">
-            <p class="text-sm text-gray-500 font-medium">Zones analysées</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">—</p>
-          </div>
+          <a
+            routerLink="/map"
+            class="bg-white rounded-2xl border border-gray-200 p-6 hover:border-indigo-300 hover:shadow-sm transition group"
+          >
+            <p class="text-sm text-gray-500 font-medium">Carte territoriale</p>
+            <p class="text-sm text-indigo-600 font-semibold mt-3 group-hover:underline">Ouvrir la carte</p>
+          </a>
+          <a
+            routerLink="/local-opportunities"
+            class="bg-white rounded-2xl border border-gray-200 p-6 hover:border-indigo-300 hover:shadow-sm transition group"
+          >
+            <p class="text-sm text-gray-500 font-medium">Opportunités locales</p>
+            <p class="text-sm text-indigo-600 font-semibold mt-3 group-hover:underline">Voir les zones en hausse</p>
+          </a>
           <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <p class="text-sm text-gray-500 font-medium">Alertes actives</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">—</p>

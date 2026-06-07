@@ -4,6 +4,7 @@ import {
   risingZonesResponseSchema,
   scoreHistoryResponseSchema,
   zoneScoreDetailSchema,
+  type ZoneFeatureCollection,
 } from '@territo/schemas';
 import { Repository } from 'typeorm';
 import { parseResponse } from '../../common/utils/parse-response';
@@ -13,6 +14,7 @@ import { ZoneScore } from '../scores/entities/zone-score.entity';
 import { AnalysisZone } from './entities/analysis-zone.entity';
 import type {
   RisingZonesQueryDto,
+  ZoneGeoJsonQueryDto,
   ZoneScoreHistoryQueryDto,
   ZoneScoresQueryDto,
 } from './schemas/zones.schemas';
@@ -28,6 +30,54 @@ export class ZonesService {
     private readonly historyRepo: Repository<ScoreHistorySnapshot>,
     private readonly postgis: PostgisRepository,
   ) {}
+
+  async getZonesGeoJson(query: ZoneGeoJsonQueryDto): Promise<ZoneFeatureCollection> {
+    const rows = await this.postgis.runQuery<{
+      zone_id: string;
+      zone_name: string;
+      global_score: string;
+      trend_label: string | null;
+      score_visibility: string;
+      confidence_score: string;
+      geometry: object;
+    }>(
+      `
+      SELECT
+        az.id                                                      AS zone_id,
+        az.name                                                    AS zone_name,
+        zs."globalScore"                                           AS global_score,
+        zs."trendLabel"                                            AS trend_label,
+        zs."scoreVisibility"                                       AS score_visibility,
+        zs."confidenceScore"                                       AS confidence_score,
+        ST_AsGeoJSON(ST_Simplify(az.geom::geometry, 0.0005))::json AS geometry
+      FROM analysis_zones az
+      JOIN zone_scores zs ON zs."zoneId"::uuid = az.id
+      WHERE az."communeCode" = $1
+        AND zs."scoreType" = $2
+        AND zs.period = $3
+        AND az.geom IS NOT NULL
+        ${query.trade ? 'AND zs."tradeOrCategory" = $4' : ''}
+      ORDER BY zs."globalScore" DESC
+      `,
+      [query.territory_code, query.score_type, query.period, ...(query.trade ? [query.trade] : [])],
+    );
+
+    return {
+      type: 'FeatureCollection' as const,
+      features: rows.map((r) => ({
+        type: 'Feature' as const,
+        geometry: r.geometry,
+        properties: {
+          zone_id: r.zone_id,
+          name: r.zone_name,
+          global_score: Number(r.global_score),
+          trend_label: r.trend_label ?? null,
+          score_visibility: r.score_visibility,
+          confidence_score: Number(r.confidence_score),
+        },
+      })),
+    };
+  }
 
   async getZoneScores(zoneId: string, query: ZoneScoresQueryDto) {
     const zone = await this.zoneRepo.findOneBy({ id: zoneId });
