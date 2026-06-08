@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
-import * as d3 from 'd3';
+import { scaleLinear, scalePoint, line, curveCatmullRom, area } from 'd3';
 import { MapService } from './map.service';
 
 const SUB_SCORE_LABELS: Record<string, string> = {
@@ -46,13 +46,16 @@ interface LinePoint {
   template: `
     <!-- Header -->
     <div
-      class="px-4 py-3 border-b border-gray-100 flex items-center gap-2 shrink-0"
+      class="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2 shrink-0"
     >
+      <span class="text-sm font-semibold text-gray-800 truncate">
+        {{ detailResource.value()?.zone?.name ?? '…' }}
+      </span>
       <button
         type="button"
         (click)="back.emit()"
-        class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
-        aria-label="Retour à la liste"
+        class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition shrink-0"
+        aria-label="Fermer le détail"
       >
         <svg
           class="w-4 h-4"
@@ -65,13 +68,10 @@ interface LinePoint {
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M15 19l-7-7 7-7"
+            d="M6 18L18 6M6 6l12 12"
           />
         </svg>
       </button>
-      <span class="text-sm font-semibold text-gray-800 truncate">
-        {{ detailResource.value()?.zone?.name ?? '…' }}
-      </span>
     </div>
 
     @if (detailResource.isLoading()) {
@@ -297,15 +297,14 @@ export class MapZoneDetailComponent {
 
   readonly yScale = computed(() => {
     const vals = this.rawSeries().map((p) => p.value);
-    if (!vals.length) return d3.scaleLinear().domain([0, 100]).range([108, 4]);
+    if (!vals.length) return scaleLinear().domain([0, 100]).range([108, 4]);
     const lo = Math.max(0, Math.min(...vals) - 10);
     const hi = Math.min(100, Math.max(...vals) + 10);
-    return d3.scaleLinear().domain([lo, hi]).range([108, 4]);
+    return scaleLinear().domain([lo, hi]).range([108, 4]);
   });
 
   readonly xScale = computed(() =>
-    d3
-      .scalePoint<string>()
+    scalePoint<string>()
       .domain(this.rawSeries().map((p) => p.label))
       .range([8, 272])
       .padding(0.1),
@@ -325,11 +324,10 @@ export class MapZoneDetailComponent {
     const pts = this.linePoints();
     if (pts.length < 2) return '';
     return (
-      d3
-        .line<LinePoint>()
+      line<LinePoint>()
         .x((p) => p.cx)
         .y((p) => p.cy)
-        .curve(d3.curveCatmullRom)(pts) ?? ''
+        .curve(curveCatmullRom)(pts) ?? ''
     );
   });
 
@@ -337,12 +335,11 @@ export class MapZoneDetailComponent {
     const pts = this.linePoints();
     if (pts.length < 2) return '';
     return (
-      d3
-        .area<LinePoint>()
+      area<LinePoint>()
         .x((p) => p.cx)
         .y0(108)
         .y1((p) => p.cy)
-        .curve(d3.curveCatmullRom)(pts) ?? ''
+        .curve(curveCatmullRom)(pts) ?? ''
     );
   });
 

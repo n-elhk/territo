@@ -6,19 +6,18 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { FormField } from '@angular/forms/signals';
 import type { GeocodingResult, GeocodingSearchResponse } from '@territo/schemas';
 
 @Component({
   selector: 'app-map-search',
-  imports: [FormField],
   template: `
     <div class="relative" (focusout)="onBlur($event)">
       <input
         type="search"
         autocomplete="off"
         [placeholder]="placeholder()"
-        [formField]="field()"
+        [value]="value()"
+        (input)="searchChange.emit($any($event.target).value)"
         (focus)="showDropdown.set(true)"
         class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         [attr.aria-label]="placeholder()"
@@ -50,11 +49,11 @@ import type { GeocodingResult, GeocodingSearchResponse } from '@territo/schemas'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MapSearchComponent {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly field = input.required<any>();
+  readonly value = input<string>('');
   readonly suggestions = input.required<GeocodingSearchResponse>();
   readonly placeholder = input('Rechercher une commune…');
 
+  readonly searchChange = output<string>();
   readonly placeSelected = output<GeocodingResult>();
 
   readonly showDropdown = signal(false);
