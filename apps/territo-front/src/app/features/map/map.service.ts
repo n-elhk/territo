@@ -1,6 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { GeocodingSearchResponse, ZoneFeatureCollection } from '@territo/schemas';
+import type {
+  GeocodingSearchResponse,
+  ZoneFeatureCollection,
+  ZoneScoreDetail,
+  ScoreHistoryResponse,
+} from '@territo/schemas';
 
 export { type ZoneProperties, type ZoneFeatureCollection } from '@territo/schemas';
 
@@ -20,5 +25,15 @@ export class MapService {
   getZonesGeoJson(territoryCode: string, scoreType: string, period: string) {
     const params = new URLSearchParams({ territory_code: territoryCode, score_type: scoreType, period });
     return this.http.get<ZoneFeatureCollection>(`/api/zones/geojson?${params}`);
+  }
+
+  getZoneDetail(zoneId: string, scoreType: string, period: string) {
+    const params = new URLSearchParams({ score_type: scoreType, period });
+    return this.http.get<ZoneScoreDetail>(`/api/zones/${zoneId}/scores?${params}`);
+  }
+
+  getZoneHistory(zoneId: string, scoreType: string, period: string) {
+    const params = new URLSearchParams({ score_type: scoreType, period });
+    return this.http.get<ScoreHistoryResponse>(`/api/zones/${zoneId}/score-history?${params}`);
   }
 }

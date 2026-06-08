@@ -300,14 +300,24 @@ def upsert_area_metric(cur, zone_id: str, period: str, period_start: date, perio
     )
 
 
-def process_zone(conn, zone: dict, periods: list[str]) -> None:
-    today = date.today()
+def get_reference_date(conn) -> date:
+    """Use the latest DVF mutation date as reference, falling back to today."""
+    with conn.cursor() as cur:
+        cur.execute('SELECT MAX("mutationDate") FROM dvf_transactions')
+        row = cur.fetchone()
+        if row and row[0]:
+            return row[0]
+    return date.today()
+
+
+def process_zone(conn, zone: dict, periods: list[str], reference_date: date | None = None) -> None:
+    ref = reference_date or date.today()
 
     with conn.cursor() as cur:
         for period_key in periods:
             months = PERIODS[period_key]
-            period_end = today
-            period_start = today - relativedelta(months=months)
+            period_end = ref
+            period_start = ref - relativedelta(months=months)
             prev_end = period_start
             prev_start = prev_end - relativedelta(months=months)
 
@@ -379,11 +389,13 @@ def main():
 
     conn = get_connection()
     try:
+        ref_date = get_reference_date(conn)
+        print(f"Reference date: {ref_date}")
         zones = get_zones(conn, args.commune)
         print(f"{len(zones)} zones to process × {len(periods)} periods")
 
         for zone in tqdm(zones, desc="Zones"):
-            process_zone(conn, zone, periods)
+            process_zone(conn, zone, periods, ref_date)
 
         print("Done.")
     finally:
