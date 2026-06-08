@@ -12,17 +12,31 @@ import { scaleLinear, scalePoint, line, curveCatmullRom, area } from 'd3';
 import { MapService } from './map.service';
 
 const SUB_SCORE_LABELS: Record<string, string> = {
-  renovation_need: 'Besoin rénovation',
-  work_signals: 'Signaux travaux',
-  trade_fit: 'Adéquation métier',
-  dvf_dynamics: 'Dynamique DVF',
-  construction_permits: 'Permis construire',
-  urban_density: 'Densité urbaine',
-  price_growth: 'Hausse des prix',
-  supply_demand: 'Offre/demande',
-  market_liquidity: 'Liquidité',
-  buyer_demand: 'Demande acquéreur',
-  commercial_risk: 'Risque commercial',
+  // prospection_locale
+  renovation_need:    'Besoin rénovation',
+  work_signals:       'Signaux travaux',
+  old_building:       'Bâti ancien',
+  market_activity:    'Activité marché',
+  // demande_btp
+  new_construction:   'Construction neuve',
+  extension_activity: 'Extensions',
+  market_size:        'Volume permis',
+  // transformation_immo
+  price_evolution:    'Évolution des prix',
+  regularity:         'Régularité ventes',
+  high_end:           'Haut de gamme',
+  // prospection_vendeurs
+  low_market_flow:    'Marché peu actif',
+  fg_urgency:         'Urgence F/G',
+  // liquidite_marche
+  volume:             'Volume ventes',
+  price_consistency:  'Homogénéité prix',
+  // quartier_mutation
+  extension_wave:     'Vague extensions',
+  dpe_activity:       'Activité DPE',
+  // valorisation_prix
+  renovation_potential: 'Potentiel rénovation',
+  construction_signal:  'Signal construction',
 };
 
 function scoreColor(score: number): string {

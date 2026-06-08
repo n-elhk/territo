@@ -13,6 +13,8 @@ export const PERIODS = [
   { value: '6m', label: '6 mois' },
   { value: '12m', label: '12 mois' },
   { value: '24m', label: '24 mois' },
+  { value: '36m', label: '36 mois' },
+  { value: '48m', label: '48 mois' },
 ] as const;
 
 export const LEGEND = [

@@ -30,6 +30,8 @@ PERIODS = {
     "6m":  6,
     "12m": 12,
     "24m": 24,
+    "36m": 36,
+    "48m": 48,
 }
 
 # Seuils qualité data (repris depuis ScoringQualityRule defaults)
@@ -157,6 +159,7 @@ def compute_dpe_metrics(cur, zone_id: str, period_start: date, period_end: date)
 
 
 def compute_urbanisme_metrics(cur, zone_id: str, period_start: date, period_end: date) -> dict:
+    # SITADEL data has no coordinates — join by communeCode (commune-level data)
     cur.execute(
         """
         SELECT
@@ -166,7 +169,7 @@ def compute_urbanisme_metrics(cur, zone_id: str, period_start: date, period_end:
             COUNT(*) FILTER (WHERE "workCategory" = 'demolition')                            AS demolition_count,
             AVG("surfaceCreated") FILTER (WHERE "surfaceCreated" > 0)                        AS avg_surface
         FROM urbanisme_projects u
-        WHERE ST_Within(u.geom, (SELECT geom FROM analysis_zones WHERE id = %s))
+        WHERE u."communeCode" = (SELECT "communeCode" FROM analysis_zones WHERE id = %s)
           AND u."decisionDate" BETWEEN %s AND %s
         """,
         (zone_id, period_start, period_end),

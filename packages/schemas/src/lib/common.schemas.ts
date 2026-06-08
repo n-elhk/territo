@@ -16,7 +16,7 @@ export const trendLabelSchema = z.enum([
   'ralentissement',
 ]);
 
-export const periodSchema = z.enum(['3m', '6m', '12m', '24m']);
+export const periodSchema = z.enum(['3m', '6m', '12m', '24m', '36m', '48m']);
 
 export const scoreTypeSchema = z.enum([
   'prospection_locale',

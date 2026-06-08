@@ -95,7 +95,7 @@ DEFAULT_CONFIGS = {
     },
 }
 
-PERIODS = ["3m", "6m", "12m", "24m"]
+PERIODS = ["3m", "6m", "12m", "24m", "36m", "48m"]
 
 BATCH_SIZE = 200
 
