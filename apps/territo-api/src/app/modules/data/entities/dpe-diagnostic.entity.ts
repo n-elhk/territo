@@ -22,8 +22,9 @@ export class DpeDiagnostic {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  // Numéro DPE pseudonymisé — jamais le numéro brut
-  @Column({ type: 'varchar', nullable: true })
+  // Numéro DPE pseudonymisé — jamais le numéro brut.
+  // Clé naturelle ADEME : unique pour garantir l'idempotence des imports.
+  @Column({ type: 'varchar', nullable: true, unique: true })
   dpeNumberHash!: string | null;
 
   @Index()

@@ -123,18 +123,31 @@ def insert_batch(cur, batch: list[tuple]) -> int:
     cur.executemany(
         """
         INSERT INTO dvf_transactions (
-            id, "mutationDate", price, "builtSurface", "landSurface",
+            id, "mutationId", "mutationDate", price, "builtSurface", "landSurface",
             "propertyType", "communeCode", "parcelId", "pricePerM2", geom
         ) VALUES (
-            gen_random_uuid(), %s, %s, %s, %s,
+            gen_random_uuid(), %s, %s, %s, %s, %s,
             %s, %s, %s, %s,
             CASE WHEN %s IS NOT NULL AND %s IS NOT NULL
                  THEN ST_SetSRID(ST_MakePoint(%s, %s), 4326)
                  ELSE NULL END
         )
-        ON CONFLICT DO NOTHING
+        ON CONFLICT ("mutationId") DO NOTHING
         """,
         batch,
+    )
+    return cur.rowcount
+
+
+def delete_scope(cur, dept: str, year: int) -> int:
+    """Le fichier geo-DVF est la vérité complète d'un (dept, année) : on remplace tout le périmètre."""
+    cur.execute(
+        """
+        DELETE FROM dvf_transactions
+        WHERE "communeCode" LIKE %s
+          AND EXTRACT(YEAR FROM "mutationDate") = %s
+        """,
+        (f"{dept}%", year),
     )
     return cur.rowcount
 
@@ -149,36 +162,41 @@ def process_dept_year(conn, dept: str, year: int) -> int:
     df = clean_dvf(df)
     print(f"  {len(df)} mutations after aggregation")
 
+    # Delete + reinsert du périmètre dans UNE transaction : idempotent,
+    # capte les mutations corrigées/supprimées, et un crash laisse la base intacte.
     inserted = 0
     rows = []
-    for _, row in df.iterrows():
-        lng = _none(row["longitude"])
-        lat = _none(row["latitude"])
-        rows.append((
-            row["date_mutation"].date(),
-            _none(row["valeur_fonciere"]),
-            _none(row["surface_reelle_bati"]),
-            _none(row["surface_terrain"]),
-            row["property_type"],
-            row["code_commune"],
-            _none(row["id_parcelle"]),
-            _none(row["price_per_m2"]),
-            lng, lat, lng, lat,  # geom params (x4 for the CASE)
-        ))
+    with conn.cursor() as cur:
+        deleted = delete_scope(cur, dept, year)
+        if deleted:
+            print(f"  {deleted} existing rows replaced for {dept}/{year}")
 
-        if len(rows) >= BATCH_SIZE:
-            with conn.cursor() as cur:
+        for _, row in df.iterrows():
+            lng = _none(row["longitude"])
+            lat = _none(row["latitude"])
+            rows.append((
+                row["id_mutation"],
+                row["date_mutation"].date(),
+                _none(row["valeur_fonciere"]),
+                _none(row["surface_reelle_bati"]),
+                _none(row["surface_terrain"]),
+                row["property_type"],
+                row["code_commune"],
+                _none(row["id_parcelle"]),
+                _none(row["price_per_m2"]),
+                lng, lat, lng, lat,  # geom params (x4 for the CASE)
+            ))
+
+            if len(rows) >= BATCH_SIZE:
                 insert_batch(cur, rows)
-            conn.commit()
-            inserted += len(rows)
-            rows = []
+                inserted += len(rows)
+                rows = []
 
-    if rows:
-        with conn.cursor() as cur:
+        if rows:
             insert_batch(cur, rows)
-        conn.commit()
-        inserted += len(rows)
+            inserted += len(rows)
 
+    conn.commit()
     return inserted
 
 

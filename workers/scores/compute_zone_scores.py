@@ -93,6 +93,29 @@ DEFAULT_CONFIGS = {
             "extension_activity":   0.15,  # permitsExtensionCount — propriétaires qui investissent
         },
     },
+    # Pitch §5.3.1.5 : « Où conseiller un acheteur qui cherche un quartier avec potentiel ? »
+    "opportunite_acquereur": {
+        "user_segment": "agence_immo",
+        "weights": {
+            "price_attractiveness": 0.30,  # inverse medianPriceM2 — prix encore bas vs les autres zones
+            "price_momentum":       0.20,  # priceM2Evolution — évolution positive (quartier qui décolle)
+            "renovation_potential": 0.20,  # dpeEfgRatio — logements à rénover = potentiel de valorisation
+            "urban_dynamics":       0.15,  # permitsCountEvolution — hausse des permis/transformations
+            "market_volume":        0.15,  # salesCount — volume de ventes suffisant
+        },
+    },
+    # Pitch §5.3.1.6 : « Quelles zones demandent de la prudence ? » (score élevé = risque élevé)
+    # Critères SIRENE (concurrence) et Géorisques non intégrés à ce stade.
+    "risque_commercial": {
+        "user_segment": "agence_immo",
+        "weights": {
+            "sales_decline":       0.25,  # inverse salesCountEvolution — volume de ventes en baisse
+            "price_stagnation":    0.25,  # inverse priceM2Evolution — prix en baisse ou stagnants
+            "fg_burden":           0.20,  # dpeFgRatio très élevé — frein réglementaire massif
+            "low_urban_activity":  0.15,  # inverse permitsCount — peu de projets urbains
+            "market_irregularity": 0.15,  # inverse regularitySalesIndex — marché trop irrégulier
+        },
+    },
 }
 
 PERIODS = ["3m", "6m", "12m", "24m", "36m", "48m"]
@@ -170,6 +193,26 @@ def raw_sub_scores(m: dict, score_type: str) -> dict[str, float | None]:
             "extension_activity":   _f(m.get("permitsextensioncount")),
         }
 
+    if score_type == "opportunite_acquereur":
+        # Négation = inversion de sens ; la normalisation p5/p95 inter-zones
+        # transforme « prix médian bas » en score d'accessibilité élevé.
+        return {
+            "price_attractiveness": _neg(m.get("medianpricem2")),
+            "price_momentum":       _f(m.get("pricem2evolution")),
+            "renovation_potential": _f(m.get("dpeefgratio")),
+            "urban_dynamics":       _f(m.get("permitscountevolution")),
+            "market_volume":        sales,
+        }
+
+    if score_type == "risque_commercial":
+        return {
+            "sales_decline":       _neg(m.get("salescountevolution")),
+            "price_stagnation":    _neg(m.get("pricem2evolution")),
+            "fg_burden":           _f(m.get("dpefgratio")),
+            "low_urban_activity":  _neg(m.get("permitscount")),
+            "market_irregularity": _neg(m.get("regularitysalesindex")),
+        }
+
     return {}
 
 
@@ -178,6 +221,12 @@ def _f(val) -> float | None:
         return float(val) if val is not None else None
     except (ValueError, TypeError):
         return None
+
+
+def _neg(val) -> float | None:
+    """Inverse le sens d'une métrique (valeur basse → sous-score élevé après normalisation)."""
+    f = _f(val)
+    return -f if f is not None else None
 
 
 # ---------------------------------------------------------------------------
@@ -327,6 +376,31 @@ def explanations(m: dict, score_type: str, sub_scores: dict[str, float]) -> list
         new = _f(m.get("permitsnewhousingcount"))
         if new and new > 5:
             parts.append(f"{int(new)} logements neufs autorisés — tire les prix à la hausse")
+
+    if score_type == "opportunite_acquereur":
+        evol = _f(m.get("pricem2evolution"))
+        if evol and evol > 3:
+            parts.append(f"Prix/m² en hausse de {round(evol, 1)}% — quartier en valorisation")
+        efg = _f(m.get("dpeefgratio"))
+        if efg and efg > 0.4:
+            parts.append(f"{round(efg*100)}% de logements E/F/G — potentiel après rénovation")
+        sales = _f(m.get("salescount"))
+        if sales and sales >= 20:
+            parts.append(f"{int(sales)} ventes sur la période — marché actif")
+
+    if score_type == "risque_commercial":
+        sales_evol = _f(m.get("salescountevolution"))
+        if sales_evol is not None and sales_evol < -10:
+            parts.append(f"Volume de ventes en baisse de {round(abs(sales_evol), 1)}%")
+        evol = _f(m.get("pricem2evolution"))
+        if evol is not None and evol < -3:
+            parts.append(f"Prix/m² en baisse de {round(abs(evol), 1)}%")
+        fg = _f(m.get("dpefgratio"))
+        if fg and fg > 0.3:
+            parts.append(f"{round(fg*100)}% de logements F/G — frein réglementaire fort")
+        reg = _f(m.get("regularitysalesindex"))
+        if reg is not None and reg < 0.3:
+            parts.append("Marché irrégulier — ventes sporadiques")
 
     return parts[:3]
 

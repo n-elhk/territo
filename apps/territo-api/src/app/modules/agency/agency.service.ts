@@ -35,23 +35,23 @@ export class AgencyService {
     }>(
       `
       SELECT
-        az.id              AS zone_id,
-        az.name            AS zone_name,
-        az.commune_code,
-        zs.score_type,
-        zs.global_score,
-        zs.trend_label,
-        zs.global_score_delta_previous,
-        zs.confidence_score,
-        zs.score_visibility
+        az.id                            AS zone_id,
+        az.name                          AS zone_name,
+        az."communeCode"                 AS commune_code,
+        zs."scoreType"                   AS score_type,
+        zs."globalScore"                 AS global_score,
+        zs."trendLabel"                  AS trend_label,
+        zs."globalScoreDeltaPrevious"    AS global_score_delta_previous,
+        zs."confidenceScore"             AS confidence_score,
+        zs."scoreVisibility"             AS score_visibility
       FROM analysis_zones az
-      JOIN zone_scores zs ON zs.zone_id = az.id
-      WHERE az.commune_code = $1
-        AND az.zone_type = $2
-        AND zs.score_type = ANY($4::text[])
+      JOIN zone_scores zs ON zs."zoneId" = az.id
+      WHERE az."communeCode" = $1
+        AND az."zoneType" = $2
+        AND zs."scoreType"::text = ANY($4::text[])
         AND zs.period = $3
-        AND zs.user_segment = 'agence_immo'
-      ORDER BY az.id, zs.score_type
+        AND zs."userSegment" = 'agence_immo'
+      ORDER BY az.id, zs."scoreType"
       `,
       [query.territory_code, query.zone_level, query.period, AGENCY_SCORE_TYPES],
     );
@@ -107,18 +107,20 @@ export class AgencyService {
       mutation_date: string;
     }>(
       `
-      SELECT price_per_m2, mutation_date
+      SELECT
+        "pricePerM2"   AS price_per_m2,
+        "mutationDate" AS mutation_date
       FROM dvf_transactions
-      WHERE property_type = $1
-        AND built_surface BETWEEN $2 AND $3
-        AND mutation_date >= NOW() - ($4 || ' months')::interval
+      WHERE "propertyType" = $1
+        AND "builtSurface" BETWEEN $2 AND $3
+        AND "mutationDate" >= NOW() - ($4 || ' months')::interval
         AND geom IS NOT NULL
         AND ST_DWithin(
           geom::geography,
           ST_SetSRID(ST_MakePoint($6, $5), 4326)::geography,
           $7
         )
-      ORDER BY mutation_date DESC
+      ORDER BY "mutationDate" DESC
       `,
       [
         dto.property_type,

@@ -14,6 +14,10 @@ export class DvfTransaction {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  // Clé naturelle geo-DVF (id_mutation, ex. "2024-123456") — garantit l'idempotence des imports
+  @Column({ unique: true })
+  mutationId!: string;
+
   @Index()
   @Column({ type: 'date' })
   mutationDate!: Date;

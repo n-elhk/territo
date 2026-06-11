@@ -118,7 +118,7 @@ def insert_batch(cur, rows: list[tuple]) -> None:
                  ELSE NULL END,
             1.0
         )
-        ON CONFLICT DO NOTHING
+        ON CONFLICT ("dpeNumberHash") DO NOTHING
         """,
         rows,
     )
@@ -138,7 +138,15 @@ def process_dept(conn, dept: str) -> int:
 
         page += 1
         rows = []
+        skipped = 0
         for item in items:
+            # numero_dpe est la clé d'idempotence : sans lui, la ligne serait
+            # dupliquée à chaque relance (les NULL échappent à la contrainte unique).
+            dpe_hash = _hash(item.get("numero_dpe"))
+            if not dpe_hash:
+                skipped += 1
+                continue
+
             lng, lat = _parse_geopoint(item.get("_geopoint"))
 
             try:
@@ -147,7 +155,7 @@ def process_dept(conn, dept: str) -> int:
                 surface = None
 
             rows.append((
-                _hash(item.get("numero_dpe")),
+                dpe_hash,
                 item.get("date_etablissement_dpe"),
                 _energy_class(item.get("etiquette_dpe")),
                 _energy_class(item.get("etiquette_ges")),
@@ -163,7 +171,8 @@ def process_dept(conn, dept: str) -> int:
             insert_batch(cur, rows)
         conn.commit()
         total += len(rows)
-        print(f"  Page {page}: +{len(rows)} (total {total})")
+        skipped_msg = f", {skipped} sans numero_dpe ignorées" if skipped else ""
+        print(f"  Page {page}: +{len(rows)} (total {total}){skipped_msg}")
 
         # data-fair returns "next" as a full URL — extract the cursor value from it
         next_url = data.get("next")

@@ -75,13 +75,21 @@ def fetch_dept(dept: str) -> list[dict]:
 
 def upsert(conn, records: list[dict]) -> int:
     rows = []
+    skipped = 0
     for r in records:
         commune_code = str(r.get("COMM") or "").strip().zfill(5) or None
         if not commune_code:
             continue
 
+        # NUM_DAU est la clé d'idempotence : sans lui, impossible de dédupliquer
+        # entre deux runs (un fallback non-déterministe dupliquerait la ligne).
+        source_id = str(r.get("NUM_DAU") or "").strip()
+        if not source_id:
+            skipped += 1
+            continue
+
         rows.append((
-            str(r.get("NUM_DAU") or "").strip() or f"{commune_code}_{id(r)}",
+            source_id,
             commune_code,
             map_project_type(r.get("TYPE_DAU")),
             map_work_category(r.get("NATURE_PROJET_COMPLETEE"), r.get("DESTINATION_PRINCIPALE")),
@@ -108,11 +116,22 @@ def upsert(conn, records: list[dict]) -> int:
                     gen_random_uuid(), %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s, %s, NULL, 1.0
                 )
-                ON CONFLICT ("sourceId") DO NOTHING
+                ON CONFLICT ("sourceId") DO UPDATE SET
+                    "projectType" = EXCLUDED."projectType",
+                    "workCategory" = EXCLUDED."workCategory",
+                    "decisionDate" = EXCLUDED."decisionDate",
+                    "filingDate" = EXCLUDED."filingDate",
+                    "openingDate" = EXCLUDED."openingDate",
+                    "completionDate" = EXCLUDED."completionDate",
+                    "surfaceCreated" = EXCLUDED."surfaceCreated",
+                    "surfaceExisting" = EXCLUDED."surfaceExisting",
+                    destination = EXCLUDED.destination
                 """,
                 rows[i : i + BATCH_SIZE],
             )
     conn.commit()
+    if skipped:
+        print(f"  {skipped} lignes sans NUM_DAU ignorées")
     return len(rows)
 
 
